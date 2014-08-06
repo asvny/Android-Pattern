@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<body>
+
+<canvas id="pattern" height="250" width="250" style="border:1px solid black"></canvas>
+
+<button id="setup">SETUP</button>
+<button id="unlock">UNLOCK</button>
+<script>
+
+
+    (function(d,w){
+
+        window.requestAnimFrame = (function(){
+            return  window.requestAnimationFrame       ||
+                    window.webkitRequestAnimationFrame ||
+                    window.mozRequestAnimationFrame    ||
+                    function( callback ){
+                        window.setTimeout(callback, 1000 / 60);
+                    };
+        })();
+
+        Array.prototype.unique=function(a){
+            return function(){
+                return this.filter(a)
+            }
+        }(
+                function(a,b,c){
+                    var tmp=[];
+                    c.forEach(function(el){
+                        tmp.push(JSON.stringify(el))
+                    });
+                    return tmp.indexOf(JSON.stringify(a),b+1)<0
+                });
+
+        Array.prototype.equals = function( array ) {
+            return this.length == array.length &&
+                    this.every( function(this_i,i) { return this_i == array[i] } )
+        }
+
+        window._SECRET=[];
+
+
+        var AndroidPattern={
+            element: document.getElementById('pattern'),
+            setup:document.getElementById('setup'),
+            unlock:document.getElementById('unlock'),
+            size:250,
+            points:[],
+            pattern:[],
+            lastXY:{x:0,y:0},
+            currentXY:{x:0,y:0},
+            record:false,
+            _initPattern:function()
+            {
+                this.points.length=this.pattern.length=0;
+                var c=this.ctx;
+                var nx=0,ny= 0,n=1;
+
+                c.fillStyle="#fff";
+                c.fillRect(0,0,this.size,this.size);
+
+                for(var i=0;i<3;i++)
+                {
+                    ny+=this.size/4;
+                    for(var j=0;j<3;j++)
+                    {
+                        nx+=this.size/4;
+                        c.beginPath();
+                        c.fillStyle='#a7a7a7';
+                        c.strokeStyle='#e8e8e8';
+                        c.lineWidth=10;
+                        c.arc(nx,ny,15,0,Math.PI*2);
+                        c.fill();
+                        c.stroke();
+                        c.closePath();
+                        this.points.push({id:(n++),x:nx,y:ny,v:0});
+                    }
+                    nx=0;
+                }
+
+
+
+            },
+            _onMouseMove:function(e)
+            {
+                var AP=AndroidPattern;
+                var c=AP.ctx;
+                c.beginPath();
+                c.strokeStyle='#ffff89';
+                c.lineWidth=10;
+                c.lineJoin = 'round';
+                c.lineCap = 'round';
+                AP._createPattern(AP.currentXY);
+                var l=AP.pattern.length;
+
+                if(l > 2)
+                {
+
+                    c.moveTo(AP.pattern[l-2].x, AP.pattern[l-2].y );
+                    c.lineTo(AP.pattern[l-1].x, AP.pattern[l-1].y);
+                }
+
+
+                c.stroke();
+
+                (function a(){
+                    requestAnimFrame(a);
+                    AndroidPattern._renderCanvas();
+                })();
+
+            },
+            _onMouseUp:function()
+            {
+                AndroidPattern.element.removeEventListener('mousemove',AndroidPattern._onMouseMove,!1);
+                if(AndroidPattern.setup.innerText.toLowerCase() === 'recording')
+                {
+                    AndroidPattern.setup.innerText='Recorded';
+                    window._SECRET=AndroidPattern.pattern.unique();
+                    setTimeout(function(){ AndroidPattern._initPattern(); },400);
+                  //  console.log('WINDOW SECRET PATTERN ');
+                  //  console.table(window._SECRET);
+                }
+                else if(AndroidPattern.setup.innerText.toLowerCase() === 'recorded')
+                {
+                  //  console.log('WINDOW  PATTERN ');
+                  //  console.table(AndroidPattern.pattern.unique());
+                  //  console.log('WINDOW SECRET PATTERN ');
+                  //  console.table(window._SECRET);
+                    if(   JSON.stringify(window._SECRET)=== JSON.stringify(AndroidPattern.pattern.unique())   )
+                    {
+                        console.info('Success');
+                    }
+                    else
+                    {
+                      //  console.log(JSON.stringify(window._SECRET));
+                      //  console.log(JSON.stringify(AndroidPattern.pattern.unique()));
+                        console.info('ERROR');
+                    }
+                }
+
+
+            },
+            _onMouseDown:function()
+            {
+                AndroidPattern.element.addEventListener('mousemove',AndroidPattern._onMouseMove,!1);
+
+            },
+            _setXY:function(e)
+            {
+                var AP=AndroidPattern;
+                AP.lastXY.x=AP.currentXY.x;
+                AP.lastXY.y=AP.currentXY.y;
+                AP.currentXY.x= e.pageX - this.offsetLeft;
+                AP.currentXY.y= e.pageY - this.offsetTop;
+
+            },
+            _createPattern:function(c)
+            {
+
+                var dist= 0,point;
+
+                for (var i=0;i<=this.points.length-1;i++)
+                {
+                    point=this.points[i];
+
+                    dist=Math.sqrt( (c.x-point.x)*(c.x-point.x) +(c.y-point.y)*(c.y-point.y));
+
+                    if(dist < 20 && this.record )
+                    {
+                        this.pattern.push(point);
+                        point.v=1;
+                    }
+
+                }
+
+
+
+            },
+            _renderCanvas:function()
+            {
+
+                var AP=AndroidPattern;
+                var c=AP.ctx,l=AP.pattern.length;
+
+                c.fillStyle="#fff";
+                c.fillRect(0,0,this.size,this.size);
+                for (var i=0;i<=this.points.length-1;i++)
+                {
+                    p=this.points[i];
+
+                    c.beginPath();
+                    if (!p.v) {
+                        c.fillStyle = '#a7a7a7';
+                        c.strokeStyle = '#e8e8e8';
+                    }
+                    else {
+                        c.fillStyle = 'lightgreen';
+                        c.strokeStyle = '#e8e8e8';
+
+                    }
+
+                    c.lineWidth = 10;
+                    c.arc(p.x, p.y, 15, 0, Math.PI * 2);
+                    c.fill();
+                    c.stroke();
+                    c.closePath();
+
+                }
+
+                c.beginPath();
+                c.strokeStyle='#ffff89';
+                c.lineWidth=10;
+                c.lineJoin = 'round';
+                c.lineCap = 'round';
+
+                for(var i=1;i<=AP.pattern.length-1;i++)
+                {
+                    c.moveTo(AP.pattern[i-1].x, AP.pattern[i-1].y );
+                    c.lineTo(AP.pattern[i].x, AP.pattern[i].y);
+
+                }
+
+
+                c.stroke();
+
+            },
+            init:function()
+            {
+                this.ctx=this.element.getContext('2d');
+                this._initPattern();
+                this.element.addEventListener('mouseup',this._onMouseUp,!1);
+                this.element.addEventListener('mousedown',this._onMouseDown,!1);
+                this.element.addEventListener('mousemove',this._setXY,!1);
+                this.setup.addEventListener('click',function(){ AndroidPattern.record =true ;this.innerText='Recording'; },!1);
+            }
+        }
+
+        AndroidPattern.init();
+
+
+    })(document,window);
+
+
+
+</script>
+</body>
+</html>
