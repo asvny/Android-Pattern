@@ -3,13 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <title>Document</title>
+    <style>
+        *
+        {
+            margin:0;
+            padding:0;
+        }
+        h1
+        {
+            text-align: center;
+            width: 500px;
+            margin:30px auto;
+            position: relative;
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            border-bottom:2px double black;
+            padding:5px;
+
+        }
+        #pattern
+        {
+            display: block;
+        }
+        p
+        {
+            font-family: "Trebuchet MS", Helvetica, sans-serif;
+            font-size: 25px;
+            text-align: center;
+        }
+        button
+        {
+          border:2px solid #a7a7a7;
+          padding:10px;
+          background: #fff;
+          border-radius: 10px;
+          margin: 0 10px;
+          outline: none;
+          cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
-<canvas id="pattern" height="250" width="250" style="border:1px solid black"></canvas>
-
+<h1>Android Pattern</h1>
+<canvas id="pattern" height="250" width="250" ></canvas>
+<p>
 <button id="setup">SETUP</button>
-<button id="unlock">UNLOCK</button>
+<!--<button id="unlock">UNLOCK</button>-->
+</p>
+<p style="margin-top: 30px;">
+ Status
+</p>
 <script>
 
 
@@ -91,7 +134,7 @@
                 var AP=AndroidPattern;
                 var c=AP.ctx;
                 c.beginPath();
-                c.strokeStyle='#ffff89';
+                c.strokeStyle='#a4c639';
                 c.lineWidth=10;
                 c.lineJoin = 'round';
                 c.lineCap = 'round';
@@ -116,14 +159,12 @@
             },
             _onMouseUp:function()
             {
-                AndroidPattern.element.removeEventListener('mousemove',AndroidPattern._onMouseMove,!1);
-                if(AndroidPattern.setup.innerText.toLowerCase() === 'recording')
+                this.element.removeEventListener('mousemove',AndroidPattern._onMouseMove,!1);
+                if(this.setup.innerText.toLowerCase() === 'recording')
                 {
-                    AndroidPattern.setup.innerText='Recorded';
-                    window._SECRET=AndroidPattern.pattern.unique();
-                    setTimeout(function(){ AndroidPattern._initPattern(); },400);
-                  //  console.log('WINDOW SECRET PATTERN ');
-                  //  console.table(window._SECRET);
+                    this.setup.innerText='Recorded';
+                    window._SECRET=this.pattern.unique();
+                    setTimeout(function(){ this._initPattern();}.bind(this),400);
                 }
                 else if(AndroidPattern.setup.innerText.toLowerCase() === 'recorded')
                 {
@@ -133,13 +174,13 @@
                   //  console.table(window._SECRET);
                     if(   JSON.stringify(window._SECRET)=== JSON.stringify(AndroidPattern.pattern.unique())   )
                     {
-                        console.info('Success');
+                        document.getElementsByTagName('p')[1].innerText='SUCCESS ';
                     }
                     else
                     {
                       //  console.log(JSON.stringify(window._SECRET));
                       //  console.log(JSON.stringify(AndroidPattern.pattern.unique()));
-                        console.info('ERROR');
+                        document.getElementsByTagName('p')[1].innerText=' ERROR ';
                     }
                 }
 
@@ -152,11 +193,11 @@
             },
             _setXY:function(e)
             {
-                var AP=AndroidPattern;
-                AP.lastXY.x=AP.currentXY.x;
-                AP.lastXY.y=AP.currentXY.y;
-                AP.currentXY.x= e.pageX - this.offsetLeft;
-                AP.currentXY.y= e.pageY - this.offsetTop;
+
+                this.lastXY.x=this.currentXY.x;
+                this.lastXY.y=this.currentXY.y;
+                this.currentXY.x= e.pageX - this.element.offsetLeft;
+                this.currentXY.y= e.pageY - this.element.offsetTop;
 
             },
             _createPattern:function(c)
@@ -199,8 +240,8 @@
                         c.strokeStyle = '#e8e8e8';
                     }
                     else {
-                        c.fillStyle = 'lightgreen';
-                        c.strokeStyle = '#e8e8e8';
+                        c.fillStyle = '#e8e8e8';
+                        c.strokeStyle = '#a7a7a7';
 
                     }
 
@@ -213,7 +254,7 @@
                 }
 
                 c.beginPath();
-                c.strokeStyle='#ffff89';
+                c.strokeStyle='#a4c639';
                 c.lineWidth=10;
                 c.lineJoin = 'round';
                 c.lineCap = 'round';
@@ -232,10 +273,11 @@
             init:function()
             {
                 this.ctx=this.element.getContext('2d');
+                this.element.style.marginLeft= (window.innerWidth) / 2 - (this.size/2) +'px';
                 this._initPattern();
-                this.element.addEventListener('mouseup',this._onMouseUp,!1);
+                this.element.addEventListener('mouseup',this._onMouseUp.bind(this),!1);
                 this.element.addEventListener('mousedown',this._onMouseDown,!1);
-                this.element.addEventListener('mousemove',this._setXY,!1);
+                this.element.addEventListener('mousemove',this._setXY.bind(this),!1);
                 this.setup.addEventListener('click',function(){ AndroidPattern.record =true ;this.innerText='Recording'; },!1);
             }
         }
