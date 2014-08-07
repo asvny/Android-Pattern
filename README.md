@@ -1,4 +1,3 @@
-# WORK IN PROGRESS
 
 ## Android Unlock Pattern Demo using Vanilla Javascript
 
